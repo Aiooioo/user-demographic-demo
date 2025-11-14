@@ -20,8 +20,7 @@ import org.apache.flink.util.Collector;
 import org.example.demo.profile.common.model.AdEvent;
 import org.example.demo.profile.common.model.EventType;
 import org.apache.flink.configuration.Configuration;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import org.example.demo.profile.collector.store.RedisProfileStoreFactory;
 
 import java.io.BufferedWriter;
 import java.nio.file.Files;
@@ -68,8 +67,9 @@ public class FlinkRealtimeProfileJob {
                 .window(SlidingEventTimeWindows.of(Time.minutes(5), Time.seconds(30)))
                 .aggregate(new CountAgg(), new AddKeyProcess());
 
-        clicks24h.addSink(new RedisHashSink(redisHost, redisPort, "profile:", "clicks_24h"));
-        views5m.addSink(new RedisHashSink(redisHost, redisPort, "profile:", "views_5m"));
+        RedisProfileStoreFactory factory = new RedisProfileStoreFactory(redisHost, redisPort, "profile:");
+        clicks24h.addSink(new TagStoreSink(factory, "clicks_24h"));
+        views5m.addSink(new TagStoreSink(factory, "views_5m"));
 
         env.execute("collector-realtime-profile-job");
     }
@@ -93,33 +93,7 @@ public class FlinkRealtimeProfileJob {
         }
     }
 
-    static class RedisHashSink extends RichSinkFunction<Tuple2<String, Long>> {
-        private final String host;
-        private final int port;
-        private final String keyPrefix;
-        private final String field;
-        private transient JedisPool pool;
-
-        RedisHashSink(String host, int port, String keyPrefix, String field) {
-            this.host = host;
-            this.port = port;
-            this.keyPrefix = keyPrefix;
-            this.field = field;
-        }
-
-        @Override
-        public void open(Configuration parameters) {
-            pool = new JedisPool(host, port);
-        }
-
-        @Override
-        public void invoke(Tuple2<String, Long> value, Context context) {
-            try (Jedis jedis = pool.getResource()) {
-                String key = keyPrefix + value.f0;
-                jedis.hset(key, field, String.valueOf(value.f1));
-            }
-        }
-    }
+    
 
     static class OdsFileSink extends RichSinkFunction<AdEvent> {
         private final String path;

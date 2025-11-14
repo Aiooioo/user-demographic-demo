@@ -1,9 +1,12 @@
 server:
-  port: 8082
+  port: 8083
 
 spring:
   application:
-    name: profile-collector
+    name: profile-service
+  redis:
+    host: localhost
+    port: 6379
   cloud:
     nacos:
       discovery:
@@ -11,16 +14,6 @@ spring:
         enabled: true
       username: nacos
       password: nacos
-
-collector:
-  kafka:
-    bootstrapServers: localhost:9092
-    topic: realtime-events
-  redis:
-    host: localhost
-    port: 6379
-  ods:
-    file: ./tmp/ad-events.log
 
 management:
   endpoints:

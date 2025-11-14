@@ -1,0 +1,33 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: profile-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        enabled: true
+      username: nacos
+      password: nacos
+    gateway:
+      routes:
+        - id: profile-collector
+          uri: lb://profile-collector
+          predicates:
+            - Path=/collector/**
+          filters:
+            - StripPrefix=1
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=/profile-service/**
+          filters:
+            - StripPrefix=1
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+
