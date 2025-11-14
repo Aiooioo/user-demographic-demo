@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: profile-gateway
+  config:
+    import:
+      - nacos:profile-gateway.yaml?group=DEFAULT_GROUP
   cloud:
     nacos:
       discovery:

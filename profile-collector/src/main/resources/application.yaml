@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: profile-collector
+  config:
+    import: nacos://127.0.0.1:8848
   cloud:
     nacos:
       discovery:
